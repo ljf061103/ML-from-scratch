@@ -1,0 +1,146 @@
+#这里使用了AI生成
+# -*- coding: utf-8 -*-
+"""
+线性回归主流Python库实现大全
+适用场景：初学者入门线性回归，对比不同库的使用逻辑
+包含库：scikit-learn（常用）、statsmodels（统计分析）、TensorFlow/Keras（深度学习）
+"""
+
+# ==================== 通用导入 ====================
+import numpy as np
+import pandas as pd
+
+# ==================== 1. scikit-learn 实现（最常用）====================
+print("="*50)
+print("1. scikit-learn 线性回归（单变量+多变量）")
+print("="*50)
+
+# 1.1 单变量线性回归（y = ax + b）
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
+
+# 数据准备（注意：scikit-learn要求X必须是2D数组，shape=(样本数, 特征数)）
+X_single = np.array([[1], [2], [3], [4], [5]])  # 单特征（必须是2D）
+y_single = np.array([2, 4, 5, 4, 5])           # 因变量
+
+# 模型训练与预测
+model_single = LinearRegression()
+model_single.fit(X_single, y_single)  # 训练
+y_pred_single = model_single.predict(X_single)  # 预测
+
+# 结果输出
+print("\n【单变量线性回归结果】")
+print(f"系数a（斜率）: {model_single.coef_[0]:.2f}")
+print(f"截距b: {model_single.intercept_:.2f}")
+print(f"拟合公式: y = {model_single.coef_[0]:.2f}x + {model_single.intercept_:.2f}")
+print(f"R²拟合度（越接近1越好）: {r2_score(y_single, y_pred_single):.2f}")
+
+# 1.2 多变量线性回归（y = a1x1 + a2x2 + a3x3 + b）
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+
+# 数据准备（3个特征）
+data_multi = pd.DataFrame({
+    'x1': [1, 2, 3, 4, 5, 6],
+    'x2': [2, 3, 4, 5, 6, 7],
+    'x3': [3, 4, 5, 6, 7, 8],
+    'y': [5, 7, 9, 11, 13, 15]
+})
+X_multi = data_multi[['x1', 'x2', 'x3']]  # 多特征（DataFrame格式）
+y_multi = data_multi['y']
+
+# 划分训练集（80%）和测试集（20%）
+X_train, X_test, y_train, y_test = train_test_split(
+    X_multi, y_multi, test_size=0.2, random_state=42  # random_state保证结果可复现
+)
+
+# 模型训练与评估
+model_multi = LinearRegression()
+model_multi.fit(X_train, y_train)  # 用训练集训练
+y_pred_multi = model_multi.predict(X_test)  # 用测试集预测
+
+# 结果输出
+print("\n【多变量线性回归结果】")
+print(f"系数（a1, a2, a3）: {np.round(model_multi.coef_, 2)}")
+print(f"截距b: {model_multi.intercept_:.2f}")
+print(f"测试集均方误差MSE（越小越好）: {mean_squared_error(y_test, y_pred_multi):.2f}")
+
+# ==================== 2. statsmodels 实现（统计分析专用）====================
+print("\n" + "="*50)
+print("2. statsmodels 线性回归（输出详细统计报告）")
+print("="*50)
+
+import statsmodels.api as sm
+
+# 数据准备（多变量示例）
+X_stats = np.array([[1, 2, 3], [2, 3, 4], [3, 4, 5], [4, 5, 6], [5, 6, 7]])
+y_stats = np.array([5, 7, 9, 11, 13])
+
+# 关键：添加常数项（statsmodels默认不包含截距b，需手动添加）
+X_stats_with_const = sm.add_constant(X_stats)
+
+# 模型训练（OLS=普通最小二乘法，线性回归的核心算法）
+model_stats = sm.OLS(y_stats, X_stats_with_const)
+results_stats = model_stats.fit()
+
+# 输出详细统计报告（含p值、R²、置信区间等，适合学术分析）
+print("\n【详细统计报告】")
+print(results_stats.summary())
+
+# ==================== 3. TensorFlow/Keras 实现（深度学习场景）====================
+print("\n" + "="*50)
+print("3. TensorFlow/Keras 线性回归（适合大规模数据）")
+print("="*50)
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+
+# 数据准备
+X_keras = np.array([[1, 2], [2, 3], [3, 4], [4, 5], [5, 6]])  # 2个特征
+y_keras = np.array([3, 5, 7, 9, 11])
+
+# 构建模型（线性回归本质是"单输出的全连接层"）
+model_keras = Sequential()
+# units=输出维度（线性回归输出1个值），input_dim=特征数（2个）
+model_keras.add(Dense(units=1, input_dim=2))
+
+# 编译模型（优化器+损失函数）
+# optimizer='adam'：常用优化器，自动调整学习率
+# loss='mse'：均方误差，线性回归的经典损失函数
+model_keras.compile(optimizer='adam', loss='mse')
+
+# 训练模型（epochs=训练次数，verbose=0表示隐藏训练日志）
+model_keras.fit(X_keras, y_keras, epochs=1000, verbose=0)
+
+# 预测与参数查看
+y_pred_keras = model_keras.predict(X_keras, verbose=0)  # 预测
+weights, bias = model_keras.layers[0].get_weights()  # 获取系数（weights）和截距（bias）
+
+# 结果输出
+print("\n【Keras线性回归结果】")
+print(f"系数: {np.round(weights.flatten(), 2)}")
+print(f"截距: {np.round(bias[0], 2)}")
+print(f"前3个预测值: {np.round(y_pred_keras[:3].flatten(), 2)}")
+
+# ==================== 常见问题排查技巧 ====================
+print("\n" + "="*50)
+print("4. 常见问题排查技巧")
+print("="*50)
+problems = [
+    "问题1：ValueError: Expected 2D array, got 1D array instead",
+    "原因：X是一维数组（如[1,2,3]），scikit-learn要求X为2D",
+    "解决：用X = X.reshape(-1, 1)将一维转为二维",
+    "",
+    "问题2：KeyError: 'column_name'",
+    "原因：DataFrame中没有指定的列名",
+    "解决：用print(data.columns)查看所有列名，检查拼写错误",
+    "",
+    "问题3：MSE过大（拟合效果差）",
+    "原因：特征与目标变量线性相关性弱，或缺少关键特征",
+    "解决：用corr()分析相关性，添加更多有效特征，或尝试非线性模型",
+    "",
+    "问题4：Keras训练loss不下降",
+    "原因：epochs太少、学习率不合适，或数据未归一化",
+    "解决：增加epochs（如2000），调整optimizer（如'adam'改为'sgd'），对数据做标准化处理"
+]
+print("\n".join(problems))
